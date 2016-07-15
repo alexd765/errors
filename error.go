@@ -183,7 +183,7 @@ func (err *Error) Stack() []byte {
 // ErrorStack returns a string that contains both the
 // error message and the callstack.
 func (err *Error) ErrorStack() string {
-	return err.TypeName() + " " + err.Error() + "\n" + string(err.Stack())
+	return err.Error() + "\n" + string(err.Stack())
 }
 
 // StackFrames returns an array of frames containing information about the
@@ -196,6 +196,9 @@ func (err *Error) StackFrames() []StackFrame {
 			err.frames[i] = NewStackFrame(pc)
 		}
 	}
+
+	//Remove the last 2 frames:
+	err.frames = err.frames[:len(err.frames)-2]
 
 	return err.frames
 }

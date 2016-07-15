@@ -35,6 +35,10 @@ func NewStackFrame(pc uintptr) (frame StackFrame) {
 	// pc -1 because the program counters we use are usually return addresses,
 	// and we want to show the line that corresponds to the function call
 	frame.File, frame.LineNumber = frame.Func().FileLine(pc - 1)
+	ind := strings.LastIndex(frame.File, "smallpdf/")
+	if ind > 0 {
+		frame.File = frame.File[ind+9:]
+	}
 	return
 
 }
@@ -50,7 +54,7 @@ func (frame *StackFrame) Func() *runtime.Func {
 // String returns the stackframe formatted in the same way as go does
 // in runtime/debug.Stack()
 func (frame *StackFrame) String() string {
-	str := fmt.Sprintf("%s:%d (0x%x)\n", frame.File, frame.LineNumber, frame.ProgramCounter)
+	str := fmt.Sprintf("%s:%d   %s()\n", frame.File, frame.LineNumber, frame.Name)
 
 	source, err := frame.SourceLine()
 	if err != nil {
