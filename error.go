@@ -50,6 +50,7 @@ import (
 	"fmt"
 	"reflect"
 	"runtime"
+	"strings"
 )
 
 // The maximum number of stackframes on any error.
@@ -58,10 +59,11 @@ var MaxStackDepth = 50
 // Error is an error with an attached stacktrace. It can be used
 // wherever the builtin error interface is expected.
 type Error struct {
-	Err    error
-	stack  []uintptr
-	frames []StackFrame
-	prefix string
+	Err       error
+	stack     []uintptr
+	frames    []StackFrame
+	prefix    string
+	extraInfo string
 }
 
 // New makes an Error from the given value. If that value is already an
@@ -183,7 +185,7 @@ func (err *Error) Stack() []byte {
 // ErrorStack returns a string that contains both the
 // error message and the callstack.
 func (err *Error) ErrorStack() string {
-	return err.Error() + "\n" + string(err.Stack())
+	return err.Error() + err.extraInfo + "\n" + string(err.Stack())
 }
 
 // StackFrames returns an array of frames containing information about the
@@ -197,8 +199,14 @@ func (err *Error) StackFrames() []StackFrame {
 		}
 	}
 
-	//Remove the last 2 frames:
-	err.frames = err.frames[:len(err.frames)-2]
+	// exclude runtime stackframes
+	var outputFrames []StackFrame
+	for _, frame := range err.frames {
+		if !strings.Contains(frame.File, "/src/runtime/") {
+			outputFrames = append(outputFrames, frame)
+		}
+	}
+	err.frames = outputFrames
 
 	return err.frames
 }
@@ -209,4 +217,9 @@ func (err *Error) TypeName() string {
 		return "panic"
 	}
 	return reflect.TypeOf(err.Err).String()
+}
+
+// AddInfo can be used to add additional information to the error and have it still be comparable
+func (err *Error) AddInfo(info string) {
+	err.extraInfo += ", " + info
 }
