@@ -220,6 +220,7 @@ func (err *Error) TypeName() string {
 }
 
 // AddInfo can be used to add additional information to the error and have it still be comparable
-func (err *Error) AddInfo(info string) {
+func (err *Error) AddInfo(info string) *Error {
 	err.extraInfo += ", " + info
+	return err
 }
